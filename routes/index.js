@@ -124,6 +124,70 @@ var selectedDay = 1;
 var WeekList = [1, 2, 3, 4];
 var DayList = [1, 2, 3];
 
+function getVueInfo() {
+	var changeWorkoutList = [];
+	
+	for (var W = 0; W < WeekList.length; W++) {
+		for (var D = 0; D < DayList.length; D++) {
+			var _W = WeekList[W];
+			var _D = DayList[D];
+			var wID = Group1WDtoID[_W][_D];
+			var date = dateString(G_UserInfo["User"].workoutDates[wID - 1]);
+			changeWorkoutList.push({Week: _W, Day: _D, Date: date});
+		}
+	}
+
+	var vueColumns = [
+		["Reps/Time(s)", 1],
+		["Weights", 2],
+		["RPE", 3],
+		["Tempo", 4],
+	]
+	var vueSubworkouts = []
+	for (var N = 0; N < G_UserInfo["thisPatterns"].length; N ++) {
+		var Pattern = G_UserInfo["thisPatterns"][N];
+		var inputList = [];
+		var tempoList = [];
+		var dataTableList = [];
+		for (var L = 0; L < Pattern.sets; L++) {
+			inputList.push("");
+			tempoList.push(["3", "2", "X"]);
+		}
+		for (var I = 0; I < vueColumns.length; I++) {
+			var item = vueColumns[I];
+			var inputDict = {};
+			inputDict.id = item[1];
+			inputDict.name = item[0];
+			inputDict.value = false;
+			if (item[0] == "Tempo") {
+				inputDict.inputs = tempoList;
+			}
+			else {
+				inputDict.inputs = inputList;
+			}
+			dataTableList.push(inputDict);
+		}
+		var subDict = {
+			name: Pattern.name,
+			RPEOptions: ["1", "2", "3", "4", "5-6", "7", "8", "9-10"],
+			dataTableItems: dataTableList,
+		}
+		subDict.name = Pattern.name;
+		vueSubworkouts.push(subDict);			
+	}
+
+	return  {
+		date: vueConvert.Date(G_UserInfo["thisWorkoutDate"]),
+		subworkouts: vueSubworkouts,
+	};
+}
+
+router.get('/workout', function(req, res) {
+	let userInfoToSend = getVueInfo();
+	console.log("RES.JSON");
+	res.json(userInfoToSend);
+});
+
 router.get('/', function(req, res
 	// , next
 	) {	
@@ -253,7 +317,8 @@ router.get('/', function(req, res
 
 			G_UserInfo["User"].workouts.patternsLoaded = true;
 			G_UserInfo["User"].save();
-			let userInfoToSend = getUserInfo();
+			// let userInfoToSend = getUserInfo();
+			let userInfoToSend = getVueInfo();
 			console.log("RES.JSON");
 			res.json(userInfoToSend);
 		});
