@@ -3,11 +3,14 @@ const app = express(); // creates an instance of an express application
 var nunjucks = require('nunjucks');
 var routes = require('./routes');
 var bodyParser = require('body-parser');
+var history = require('connect-history-api-fallback');
+var cors = require('cors');
 var loadData = require('./loadData');
 
 // app.get('/', (req, res) => res.send('New Alloy Strength'))
 app.use(bodyParser.urlencoded({ extended: true })); // for HTML form submits
 app.use(bodyParser.json()); // would be for AJAX requests
+app.use(cors());
 
 // var thisUser = await User.findById(1).then(user => {
 // 	console.log("USER FOUND!!! USER ID: " + user.id);
@@ -28,6 +31,9 @@ var models = require('./models');
 models.db.sync()
 .then(function () {
     console.log('All tables created!');
+    /* Place this line below all the requests; 
+     * otherwise server cannot get route (when using Vue) */
+    //app.use(history()); 
     app.listen(3000, function () {
         console.log('Server is listening on port 3000!');
     });
