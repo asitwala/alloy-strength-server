@@ -119,7 +119,7 @@ router.get('/', function(req, res
 	// res.redirect('/');
 	if (!thisUser) {
 		// Loading
-		render();
+		// render();
 	}
 	// G_UserInfo = userRefDict(thisUser);
 	// G_UserInfo["thisWorkoutID"] = 13;
@@ -237,10 +237,12 @@ router.get('/', function(req, res
 
 			G_UserInfo["User"].workouts.patternsLoaded = true;
 			G_UserInfo["User"].save();
-			render();
+			let userInfoToSend = getUserInfo();
+			res.json(userInfoToSend);
 		});
 	});
 	
+	// TODO -- clean this up; call something other than 
 	function render() {
 		console.log("RENDER FUNCTION");
 		// console.log("thisPatterns: " + thisPatterns.length);
@@ -284,7 +286,46 @@ router.get('/', function(req, res
 		});
 	}
 
+	function getUserInfo() {
+		var changeWorkoutList = [];
+		
+		for (var W = 0; W < WeekList.length; W++) {
+			for (var D = 0; D < DayList.length; D++) {
+				var _W = WeekList[W];
+				var _D = DayList[D];
+				var wID = Group1WDtoID[_W][_D];
+				var date = dateString(G_UserInfo["User"].workoutDates[wID - 1]);
+				changeWorkoutList.push({Week: _W, Day: _D, Date: date});
+			}
+		}
+
+		return  {
+			ETypes: globals.Exercise_Types,
+			// Patterns: UserStats.CurrentWorkout.Patterns,
+			// ExerciseStats: UserStats.ExerciseStats,			
+			
+			thisDate: dateString(G_UserInfo["thisWorkoutDate"]),
+
+			Patterns: G_UserInfo["thisPatterns"],
+			UserStats: G_UserInfo["Stats"],			
+			levelUp: G_UserInfo["Stats"]["Level Up"],
+			UBpressStat: G_UserInfo["Stats"]["Squat"],
+			squatStat: G_UserInfo["Stats"]["UB Hor Pull"],
+			hingeStat: G_UserInfo["Stats"]["Hinge"],
+
+			TestDict: {Test1: "Test1", Test2: "Test2"},
+			selectedWeek,
+			selectedDay,
+			allWorkouts: G_UserInfo["Workouts"],
+			WeekList,
+			DayList,
+			selectWorkoutList: changeWorkoutList,
+		};
+	}
+
 });
+
+
 
 
 router.post('/', function(req, res) {
