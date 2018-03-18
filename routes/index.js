@@ -87,6 +87,17 @@ function dateString(date) {
 	return output
 }
 
+var vueConvert = {
+	Date: function(date) {
+		var output = "";
+		var year = date.getFullYear();
+		var month = date.getMonth() + 1;
+		var day = date.getDate();
+		output = year + "-" + month + "-" + day;
+		return output;
+	}
+}
+
 var userFound = false; 
 var thisUser; 
 var thisPatterns;
@@ -121,6 +132,11 @@ router.get('/', function(req, res
 		// Loading
 		// render();
 	}
+	// For TESTING - SETTING WORKOUT TO WEEK 3 DAY 1
+	selectedWeek = 3;
+	selectedDay = 1;
+	G_UserInfo["thisWorkoutID"] = Group1WDtoID[3][1];
+
 	// G_UserInfo = userRefDict(thisUser);
 	// G_UserInfo["thisWorkoutID"] = 13;
 	console.log("ROUTE.GET STARTS ");
@@ -144,13 +160,13 @@ router.get('/', function(req, res
 	// console.log(G_UserInfo["User"].workoutDates[G_UserInfo["thisWorkoutID"]]);
 
 	// console.log(G_UserInfo["thisPatterns"]);
-	console.log(G_UserInfo["User"].workouts);
+	// console.log(G_UserInfo["User"].workouts);
 	// console.log("User.workouts[TemplateID].Patterns:");
 	// console.log(G_UserInfo["User"].workouts[TemplateID].Patterns);
 	if (G_UserInfo["User"].workouts[TemplateID].Patterns.length != 0) {
 		G_UserInfo["thisPatterns"] = G_UserInfo["User"].workouts[TemplateID].Patterns;
 		G_UserInfo["thisWorkout"] = G_UserInfo["User"].workouts[TemplateID];
-		render();
+		// render();
 		return
 	}
 
@@ -190,7 +206,7 @@ router.get('/', function(req, res
 				patternInstance.setList = [];
 				patternInstance.sets = Sets;
 				patternInstance.workoutType = elem.type;
-				console.log("elem.type: " + elem.type);
+				// console.log("elem.type: " + elem.type);
 				if (patternInstance.workoutType == "stop") {
 					patternInstance.stop = true;
 					patternInstance.specialValue = elem.specialValue;
@@ -238,6 +254,7 @@ router.get('/', function(req, res
 			G_UserInfo["User"].workouts.patternsLoaded = true;
 			G_UserInfo["User"].save();
 			let userInfoToSend = getUserInfo();
+			console.log("RES.JSON");
 			res.json(userInfoToSend);
 		});
 	});
@@ -299,27 +316,82 @@ router.get('/', function(req, res
 			}
 		}
 
+		var vueColumns = [
+			["Reps/Time(s)", 1],
+			["Weights", 2],
+			["RPE", 3],
+			["Tempo", 4],
+		]
+		var vueSubworkouts = []
+		for (var N = 0; N < G_UserInfo["thisPatterns"].length; N ++) {
+			var Pattern = G_UserInfo["thisPatterns"][N];
+			var inputList = [];
+			var tempoList = [];
+			var dataTableList = [];
+			for (var L = 0; L < Pattern.sets; L++) {
+				inputList.push("");
+				tempoList.push(["3", "2", "X"]);
+			}
+			for (var I = 0; I < vueColumns.length; I++) {
+				var item = vueColumns[I];
+				var inputDict = {};
+				inputDict.id = item[1];
+				inputDict.name = item[0];
+				inputDict.value = false;
+				if (item[0] == "Tempo") {
+					inputDict.inputs = tempoList;
+				}
+				else {
+					inputDict.inputs = inputList;
+				}
+				dataTableList.push(inputDict);
+			}
+			var subDict = {
+				name: Pattern.name,
+				RPEOptions: ["1", "2", "3", "4", "5-6", "7", "8", "9-10"],
+				dataTableItems: dataTableList,
+				// inputs: inputList,
+				// 3 x "" => ["", "", ""]
+			}
+			subDict.name = Pattern.name;
+			// subDict.sets = Pattern.sets;
+			vueSubworkouts.push(subDict);			
+		}
+
+		// Data.RPEOptions = [
+		// 	"1", 
+		// 	"2", 
+		// 	"3", 
+		// 	"4",
+		// 	"5-6", 
+		// 	"7", 
+		// 	"8", 
+		// 	"9-10"
+		// ]
 		return  {
-			ETypes: globals.Exercise_Types,
-			// Patterns: UserStats.CurrentWorkout.Patterns,
-			// ExerciseStats: UserStats.ExerciseStats,			
-			
-			thisDate: dateString(G_UserInfo["thisWorkoutDate"]),
+			// vueDict: {
+				date: vueConvert.Date(G_UserInfo["thisWorkoutDate"]),
+				// n_subworkouts: G_UserInfo["thisPatterns"].length,
+				subworkouts: vueSubworkouts,
+			// },
+			// ETypes: globals.Exercise_Types,
+			// // Patterns: UserStats.CurrentWorkout.Patterns,
+			// // ExerciseStats: UserStats.ExerciseStats,			
+			// thisDate: dateString(G_UserInfo["thisWorkoutDate"]),
+			// Patterns: G_UserInfo["thisPatterns"],
+			// UserStats: G_UserInfo["Stats"],			
+			// levelUp: G_UserInfo["Stats"]["Level Up"],
+			// UBpressStat: G_UserInfo["Stats"]["Squat"],
+			// squatStat: G_UserInfo["Stats"]["UB Hor Pull"],
+			// hingeStat: G_UserInfo["Stats"]["Hinge"],
 
-			Patterns: G_UserInfo["thisPatterns"],
-			UserStats: G_UserInfo["Stats"],			
-			levelUp: G_UserInfo["Stats"]["Level Up"],
-			UBpressStat: G_UserInfo["Stats"]["Squat"],
-			squatStat: G_UserInfo["Stats"]["UB Hor Pull"],
-			hingeStat: G_UserInfo["Stats"]["Hinge"],
-
-			TestDict: {Test1: "Test1", Test2: "Test2"},
-			selectedWeek,
-			selectedDay,
-			allWorkouts: G_UserInfo["Workouts"],
-			WeekList,
-			DayList,
-			selectWorkoutList: changeWorkoutList,
+			// TestDict: {Test1: "Test1", Test2: "Test2"},
+			// selectedWeek,
+			// selectedDay,
+			// allWorkouts: G_UserInfo["Workouts"],
+			// WeekList,
+			// DayList,
+			// selectWorkoutList: changeWorkoutList,
 		};
 	}
 
